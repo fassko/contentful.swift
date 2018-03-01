@@ -304,7 +304,7 @@ extension Client {
         // at the moment. We also are not expecting any consumers to have > 1000 locales as Contentful subscriptions do not allow that.
         let query = ResourceQuery.limit(to: QueryConstants.maxLimit)
         let url = self.url(endpoint: .locales, parameters: query.parameters)
-        return fetch(url: url) { (result: Result<ArrayResponse<Contentful.Locale>>) in
+        return fetch(url: url) { (result: Result<Collection<Contentful.Locale>>) in
 
             guard let locales = result.value?.items else {
                 let error = SDKError.localeHandlingError(message: "Unable to parse locales from JSON")
@@ -406,7 +406,7 @@ extension Client {
      - Returns: The data task being used, enables cancellation of requests.
      */
     @discardableResult public func fetchAssets(matching query: AssetQuery? = nil,
-                                               then completion: @escaping ResultsHandler<ArrayResponse<Asset>>) -> URLSessionDataTask? {
+                                               then completion: @escaping ResultsHandler<Collection<Asset>>) -> URLSessionDataTask? {
         return fetch(url: url(endpoint: .assets, parameters: query?.parameters), then: completion)
     }
 
@@ -416,8 +416,8 @@ extension Client {
      - Parameter query: The AssetQuery object to match results against.
      - Returns: The `Observable` for the resulting array of Assets.
      */
-    @discardableResult public func fetchAssets(matching query: AssetQuery? = nil) -> Observable<Result<ArrayResponse<Asset>>> {
-        let asyncDataTask: AsyncDataTask<AssetQuery?, ArrayResponse<Asset>> = fetchAssets(matching:then:)
+    @discardableResult public func fetchAssets(matching query: AssetQuery? = nil) -> Observable<Result<Collection<Asset>>> {
+        let asyncDataTask: AsyncDataTask<AssetQuery?, Collection<Asset>> = fetchAssets(matching:then:)
         return toObservable(parameter: query, asyncDataTask: asyncDataTask).observable
     }
 
@@ -444,8 +444,8 @@ extension Client {
 // New way of interacting to be made public in future pull requests.
 extension Client {
 
-    @discardableResult internal func fetch<ResourceType, QueryType>(_ resourceType: ResourceType.Type, _ query: QueryType,
-        then completion: @escaping ResultsHandler<ArrayResponse<ResourceType>>) -> URLSessionDataTask?
+    @discardableResult internal func fetchCollection<ResourceType, QueryType>(_ resourceType: ResourceType.Type, _ query: QueryType,
+        then completion: @escaping ResultsHandler<Collection<ResourceType>>) -> URLSessionDataTask?
         where ResourceType: EndpointAccessible & ResourceQueryable, QueryType == ResourceType.QueryType {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: completion)
     }
@@ -455,7 +455,7 @@ extension Client {
                                                          then completion: @escaping ResultsHandler<ResourceType>) -> URLSessionDataTask?
         where ResourceType: Resource & Decodable & EndpointAccessible {
 
-            let fetchCompletion: (Result<ArrayResponse<ResourceType>>) -> Void = { result in
+            let fetchCompletion: (Result<Collection<ResourceType>>) -> Void = { result in
                 switch result {
                 case .success(let response) where response.items.first != nil:
                     completion(Result.success(response.items.first!))
@@ -470,20 +470,15 @@ extension Client {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: fetchCompletion)
     }
 
-//    @discardableResult internal func fetch<EntryType>(matching query: QueryOn<EntryType>,
-//                                                      then completion: @escaping ResultsHandler<MappedArrayResponse<EntryType>>) -> URLSessionDataTask? {
-//        let url = self.url(endpoint: .entries, parameters: query.parameters)
-//        return fetch(url: url, then: completion)
-//    }
-
-    @discardableResult internal func fetch<EntryType>(_ entryType: EntryType.Type, _ query: QueryOn<EntryType>,
-                                                      then completion: @escaping ResultsHandler<MappedArrayResponse<EntryType>>) -> URLSessionDataTask? {
+    @discardableResult internal func fetch<EntryType>(_ entryType: Collection<EntryType>.Type,
+                                                                _ query: QueryOn<EntryType>,
+                                                                hen completion: @escaping ResultsHandler<Collection<EntryType>>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
     }
 
     @discardableResult internal func fetch(_ query: Query,
-                                           then completion: @escaping ResultsHandler<MixedMappedArrayResponse>) -> URLSessionDataTask? {
+                                           then completion: @escaping ResultsHandler<MixedCollection>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
     }
@@ -524,7 +519,7 @@ extension Client {
      - Returns: The data task being used, enables cancellation of requests.
      */
     @discardableResult public func fetchContentTypes(matching query: ContentTypeQuery? = nil,
-                                                     then completion: @escaping ResultsHandler<ArrayResponse<ContentType>>) -> URLSessionDataTask? {
+                                                     then completion: @escaping ResultsHandler<Collection<ContentType>>) -> URLSessionDataTask? {
         return fetch(url: url(endpoint: .contentTypes, parameters: query?.parameters), then: completion)
     }
 
@@ -535,8 +530,8 @@ extension Client {
 
      - Returns: A tuple of data task and a signal for the resulting array of Content Types.
      */
-    @discardableResult public func fetchContentTypes(matching query: ContentTypeQuery? = nil) -> Observable<Result<ArrayResponse<ContentType>>> {
-        let asyncDataTask: AsyncDataTask<ContentTypeQuery?, ArrayResponse<ContentType>> = fetchContentTypes(matching:then:)
+    @discardableResult public func fetchContentTypes(matching query: ContentTypeQuery? = nil) -> Observable<Result<Collection<ContentType>>> {
+        let asyncDataTask: AsyncDataTask<ContentTypeQuery?, Collection<ContentType>> = fetchContentTypes(matching:then:)
         return toObservable(parameter: query, asyncDataTask: asyncDataTask).observable
     }
 }
@@ -552,7 +547,7 @@ extension Client {
      */
     @discardableResult public func fetchEntry(id: String,
                                               then completion: @escaping ResultsHandler<Entry>) -> URLSessionDataTask? {
-        let fetchEntriesCompletion: (Result<ArrayResponse<Entry>>) -> Void = { result in
+        let fetchEntriesCompletion: (Result<Collection<Entry>>) -> Void = { result in
             switch result {
             case .success(let entries) where entries.items.first != nil:
                 completion(Result.success(entries.items.first!))
@@ -590,7 +585,7 @@ extension Client {
      - Returns: The data task being used, enables cancellation of requests.
      */
     @discardableResult public func fetchEntries(matching query: Query? = nil,
-                                                then completion: @escaping ResultsHandler<ArrayResponse<Entry>>) -> URLSessionDataTask? {
+                                                then completion: @escaping ResultsHandler<Collection<Entry>>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query?.parameters)
         return fetch(url: url, then: completion)
     }
@@ -603,8 +598,8 @@ extension Client {
 
      - Returns: A tuple of data task and an observable for the resulting array of Entry's.
      */
-    @discardableResult public func fetchEntries(matching query: Query? = nil) -> Observable<Result<ArrayResponse<Entry>>> {
-        let asyncDataTask: AsyncDataTask<Query?, ArrayResponse<Entry>> = fetchEntries(matching:then:)
+    @discardableResult public func fetchEntries(matching query: Query? = nil) -> Observable<Result<Collection<Entry>>> {
+        let asyncDataTask: AsyncDataTask<Query?, Collection<Entry>> = fetchEntries(matching:then:)
         return toObservable(parameter: query, asyncDataTask: asyncDataTask).observable
     }
 }
