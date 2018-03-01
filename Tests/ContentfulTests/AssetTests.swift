@@ -76,7 +76,7 @@ class AssetTests: XCTestCase {
     func testFetchImageForAsset() {
         let expectation = self.expectation(description: "Fetch image from asset network expectation")
 
-        AssetTests.client.fetchAsset(id: "nyancat").then { asset in
+        AssetTests.client.fetch(Asset.self, id: "nyancat").then { asset in
             AssetTests.client.fetchImage(for: asset).then { image in
 
                 expect(image.size.width).to(equal(250.0))
@@ -101,6 +101,7 @@ class AssetTests: XCTestCase {
             case .error(let error):
                 fail("\(error)")
             }
+            expectation.fulfill()
         }
 
         waitForExpectations(timeout: 10.0, handler: nil)
