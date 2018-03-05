@@ -28,6 +28,9 @@ public enum SDKError: Error {
     /// Thrown if the subsequent sync operations are executed in preview mode.
     case previewAPIDoesNotSupportSync()
 
+    // FIXME: Rename./
+    case noValuePresentFor()
+
     /**
      Thrown when receiving unparseable JSON responses.
      - Parameter data: The data being parsed.
