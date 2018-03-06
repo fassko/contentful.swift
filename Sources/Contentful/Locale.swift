@@ -74,6 +74,8 @@ public class LocalizationContext  {
     /// An ordered collection of locales representing the fallback chain.
     public let locales: [LocaleCode: Locale]
 
+    public var currentLocale: Locale
+
     /// The default locale of the space.
     public let `default`: Locale
 
@@ -84,7 +86,7 @@ public class LocalizationContext  {
             return nil
         }
         self.`default` = defaultLocale
-
+        self.currentLocale = defaultLocale
         var localeMap = [LocaleCode: Locale]()
         locales.forEach { localeMap[$0.code] = $0 }
         self.locales = localeMap
