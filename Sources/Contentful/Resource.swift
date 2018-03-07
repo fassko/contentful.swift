@@ -8,33 +8,6 @@
 
 import Foundation
 
-/// Protocol for resources inside Contentful
-public protocol Resource {
-
-    /// System fields
-    var sys: Sys { get }
-}
-
-extension Resource {
-    /// The unique identifier of this Resource.
-    public var id: String {
-        return sys.id
-    }
-
-    /// The language identifier. Generally in the format language-region or language-dialect e.g: en-US, de-DE.
-    public var localeCode: String? {
-        return sys.locale
-    }
-}
-
-public class DeletedResource: Resource, Decodable {
-
-    public let sys: Sys
-
-    init(sys: Sys) {
-        self.sys = sys
-    }
-}
 
 /**
  LocalizableResource
@@ -45,7 +18,7 @@ public class DeletedResource: Resource, Decodable {
  all locales. This class gives an interface to specify which locale should be used when fetching data
  from `Resource` instances that are in memory.
  */
-public class LocalizableResource: Resource, Decodable {
+public class LocalizableResource: Resource, ResourceProtocol, Decodable {
 
     /// System fields
     public let sys: Sys
@@ -235,30 +208,4 @@ public extension Dictionary where Key: ExpressibleByStringLiteral {
         return location
     }
 
-}
-
-// MARK: Internal
-
-extension LocalizableResource: Hashable {
-
-    public var hashValue: Int {
-        return id.hashValue
-    }
-}
-
-extension LocalizableResource: Equatable {}
-/// Equatable implementation for `LocalizableResource`
-public func == (lhs: LocalizableResource, rhs: LocalizableResource) -> Bool {
-    return lhs.id == rhs.id && lhs.sys.updatedAt == rhs.sys.updatedAt
-}
-
-
-public func +=<K, V> (left: [K: V], right: [K: V]) -> [K: V] {
-    var result = left
-    right.forEach { (key, value) in result[key] = value }
-    return result
-}
-
-public func +<K, V> (left: [K: V], right: [K: V]) -> [K: V] {
-    return left += right
 }

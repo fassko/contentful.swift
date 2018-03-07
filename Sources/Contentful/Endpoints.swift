@@ -21,6 +21,4 @@ public enum Endpoint: String {
     }
 }
 
-internal protocol EndpointAccessible {
-    static var endpoint: Endpoint { get }
-}
+

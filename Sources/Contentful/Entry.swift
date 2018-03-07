@@ -11,10 +11,10 @@ import Foundation
 /// An Entry represents a typed collection of data in Contentful
 public class Entry: LocalizableResource {
 
-    /// The language identifier. Generally in the format language-region or language-dialect e.g: en-US, de-DE.
-    public var localeCode: String? {
-        return sys.locale
-    }
+//    /// The language identifier. Generally in the format language-region or language-dialect e.g: en-US, de-DE.
+//    public var localeCode: String? {
+//        return sys.locale
+//    }
 
     /// A convenience subscript operator to access the fields dictionary directly and return a String?
     public subscript(key: String) -> String? {

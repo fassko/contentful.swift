@@ -8,22 +8,6 @@
 
 import Foundation
 
-/**
- Classes conforming to this protocol can be passed into your Client instance so that fetch methods
- asynchronously returning MappedCollection can be used and classes of your own definition can be returned.
-
- It's important to note that there is no special handling of locales so if using the locale=* query parameter,
- you will need to implement the special handing in your `init(from decoder: Decoder) throws` initializer for your class.
-
- Example:
-
- ```
- func fetchMappedEntries(with query: Query<Cat>,
- then completion: @escaping ResultsHandler<MappedCCollection<Cat>>) -> URLSessionDataTask?
- ```
- */
-public typealias EntryDecodable = Resource & EntryModel
-
 
 /// Helper methods for decoding instances of the various types in your content model.
 public extension Decoder {
@@ -76,6 +60,13 @@ internal extension EntryModel where Self: EntryDecodable {
     static func popEntryDecodable(from container: inout UnkeyedDecodingContainer) throws -> Self {
         let entryDecodable = try container.decode(self)
         return entryDecodable
+    }
+}
+
+internal extension AssetProtocol where Self: AssetDecodable {
+    static func popAssetDecodable(from container: inout UnkeyedDecodingContainer) throws -> Self {
+        let assetDecodable = try container.decode(self)
+        return assetDecodable
     }
 }
 
@@ -197,7 +188,7 @@ public struct ContentfulFieldsContainer<K>: KeyedDecodingContainerProtocol where
             linkResolver.resolve(links, callback: callback)
         }
     }
-    
+
     public typealias Key = K
 
     private let keyedDecodingContainer: KeyedDecodingContainer<K>
@@ -322,6 +313,7 @@ public struct ContentfulFieldsContainer<K>: KeyedDecodingContainerProtocol where
         return try keyedDecodingContainer.superDecoder(forKey: key)
     }
 }
+
 public class LinkResolver {
 
     private var dataCache: DataCache = DataCache()
@@ -342,7 +334,7 @@ public class LinkResolver {
         }
     }
 
-    public func cache(resources: [Resource & Decodable]) {
+    public func cache(resources: [ResourceProtocol & Decodable]) {
         for resource in resources {
             if let asset = resource as? Asset {
                 dataCache.add(asset: asset)

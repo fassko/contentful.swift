@@ -8,20 +8,7 @@
 
 import Foundation
 
-/// A protocol enabling strongly typed queries to the Contentful Delivery API via the SDK.
-public protocol EntryQueryable {
 
-    /// The CodingKey representing the names of each of the fields for the corresponding content type.
-    /// These coding keys should be the same as those used when implementing Decodable.
-    associatedtype Fields: CodingKey
-}
-
-
-// To be made available in the next public release.
-internal protocol ResourceQueryable {
-
-    associatedtype QueryType: AbstractQuery
-}
 
 /// A concrete implementation of ChainableQuery which can be used to make queries on `/entries/`
 /// or `/entries`. All methods from ChainableQuery are available.

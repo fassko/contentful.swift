@@ -9,7 +9,7 @@
 import Foundation
 
 /// A Space represents a collection of Content Types, Assets and Entries in Contentful
-public class Space: Resource, Decodable {
+public class Space: Resource, ResourceProtocol, Decodable {
 
     ///  System fields.
     public let sys: Sys

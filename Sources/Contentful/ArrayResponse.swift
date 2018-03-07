@@ -273,8 +273,9 @@ extension KeyedDecodingContainer {
 
     // Decodes collections that include both entries, assets, and deleted resources.
     public func decodeHeterogeneousCollection(forKey key: K,
-                                                contentTypes: [ContentTypeId: EntryDecodable.Type],
-                                                throwIfNotPresent: Bool) throws -> [Resource & Decodable]? {
+                                              contentTypes: [ContentTypeId: EntryDecodable.Type],
+                                              assetType: AssetDecodable.Type = Asset.self,
+                                              throwIfNotPresent: Bool) throws -> [ResourceProtocol & Decodable]? {
 
 
         guard let itemsAsDictionaries = try self.decodeIfPresent(Swift.Array<Any>.self, forKey: key) as? [[String: Any]] else {
@@ -286,7 +287,7 @@ extension KeyedDecodingContainer {
         }
         var entriesJSONContainer = try self.nestedUnkeyedContainer(forKey: key)
 
-        var entries: [Resource & Decodable] = []
+        var entries: [ResourceProtocol & Decodable] = []
         while entriesJSONContainer.isAtEnd == false {
             if let contentTypeInfo = itemsAsDictionaries.contentTypeInfo(at: entriesJSONContainer.currentIndex) {
                 // For includes, if the type of this entry isn't defined by the user, we skip serialization.
@@ -298,7 +299,7 @@ extension KeyedDecodingContainer {
                     // UnkeyedCodingContainer other than actually decoding an item
                     _ = try? entriesJSONContainer.decode(EmptyDecodable.self)
                 }
-            } else if let asset = try? entriesJSONContainer.decode(Asset.self) {
+            } else if let asset = try? assetType.popAssetDecodable(from: &entriesJSONContainer) {
                 entries.append(asset)
             } else {
                 let errorMessage = "SDK was unable to parse sys.type property necessary to finish resource serialization."
