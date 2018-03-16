@@ -53,7 +53,7 @@ public extension Decoder {
     }
 }
 
-internal extension EntryModel where Self: EntryDecodable {
+internal extension Decodable where Self: EntryDecodable {
     // This is a magic workaround for the fact that dynamic metatypes cannot be passed into
     // initializers such as UnkeyedDecodingContainer.decode(Decodable.Type), yet static methods CAN
     // be called on metatypes.
@@ -63,7 +63,7 @@ internal extension EntryModel where Self: EntryDecodable {
     }
 }
 
-internal extension AssetProtocol where Self: AssetDecodable {
+internal extension Decodable where Self: AssetDecodable {
     static func popAssetDecodable(from container: inout UnkeyedDecodingContainer) throws -> Self {
         let assetDecodable = try container.decode(self)
         return assetDecodable
@@ -272,9 +272,10 @@ public struct ContentfulFieldsContainer<K>: KeyedDecodingContainerProtocol where
         return try _decode(type, forKey: key)
     }
 
+    // Walks the fallback chain if the
     private func _decode<T>(_ type: T.Type, forKey key: K) throws -> T where T: Decodable {
-        if let bool = try? keyedDecodingContainer.decode(type, forKey: key) {
-            return bool
+        if let value = try? keyedDecodingContainer.decode(type, forKey: key) {
+            return value
         } else {
             var currentLocale = localizationContext.currentLocale
             let localesContainer = try keyedDecodingContainer.nestedContainer(keyedBy: JSONCodingKeys.self, forKey: key)
@@ -287,10 +288,10 @@ public struct ContentfulFieldsContainer<K>: KeyedDecodingContainerProtocol where
                     currentLocale = fallbackLocale
                 }
             }
-            if let bool = try? localesContainer.decode(type, forKey: JSONCodingKeys(stringValue: currentLocale.code)!) {
-                return bool
+            if let value = try? localesContainer.decode(type, forKey: JSONCodingKeys(stringValue: currentLocale.code)!) {
+                return value
             }
-            throw SDKError.noValuePresentFor()
+            throw SDKError.noValuePresent(fieldKey: key)
         }
     }
     public func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T: Decodable {
@@ -343,8 +344,8 @@ public class LinkResolver {
             }
         }
     }
-    // Caches the callback to resolve the relationship represented by a Link at a later time.
 
+    // Caches the callback to resolve the relationship represented by a Link at a later time.
     internal func resolve(_ link: Link, callback: @escaping (Any) -> Void) {
         let key = DataCache.cacheKey(for: link)
         // New swift 4 API!

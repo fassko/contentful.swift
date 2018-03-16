@@ -39,10 +39,10 @@ class EntryTests: XCTestCase {
         (client.urlSession as? DVR.Session)?.endRecording()
     }
 
-    func waitUntilMatchingEntries(_ query: Query, action: @escaping (_ entries: CCollection<Entry>) -> ()) {
+    func waitUntilMatchingEntries(_ query: Query, action: @escaping (_ entries: ArrayResponse<Entry>) -> ()) {
         let expecatation = self.expectation(description: "Entries matching query network expectation")
 
-        EntryTests.client.fetch(CCollection<Entry>.self, query) { result in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, query) { result in
             switch result {
             case .success(let collection):
                 action(collection)
@@ -215,7 +215,7 @@ class EntryTests: XCTestCase {
     func testFetchAllEntriesInSpace() {
         let expectation = self.expectation(description: "Fetch all entries in space expectation")
 
-        EntryTests.client.fetch(CCollection<Entry>.self, Query()) { (result) in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, Query()) { (result) in
             switch result {
             case let .success(array):
                 expect(array.total).to(equal(10))
@@ -234,7 +234,7 @@ class EntryTests: XCTestCase {
 
     func testFetchEntriesOfContentType() {
         let expectation = self.expectation(description: "Fetch entires of content type expectation")
-        EntryTests.client.fetch(CCollection<Entry>.self, .where(contentTypeId: "cat")) { result in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, .where(contentTypeId: "cat")) { result in
             switch result {
             case .success(let array):
                 let cats = array.items.filter { $0.sys.contentTypeId == "cat" }
@@ -250,7 +250,7 @@ class EntryTests: XCTestCase {
     func testFetchSpecificEntryMatchingSysId() {
 
         let expectation = self.expectation(description: "Fetch specific entry with id expectation")
-        EntryTests.client.fetch(CCollection<Entry>.self, .where(valueAtKeyPath: "sys.id", .equals("nyancat"))) { result in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, .where(valueAtKeyPath: "sys.id", .equals("nyancat"))) { result in
 
             switch result {
             case let .success(array):
@@ -292,7 +292,7 @@ class EntryTests: XCTestCase {
     }
 
     func testFetchEntriesWithInclusionSearch() {
-        let action: (CCollection<Entry>) -> () = {
+        let action: (ArrayResponse<Entry>) -> () = {
             expect($0.items.count).to(equal(2))
             let ids = $0.items.map { $0.sys.id }
             expect(ids).to(equal(["finn", "jake"]))
@@ -390,7 +390,7 @@ class EntryTests: XCTestCase {
         let query = Query.where(linksToAssetWithId: "happycat")
         let expectation = self.expectation(description: "Will return entries pointing to the happy cat image")
 
-        EntryTests.client.fetch(CCollection<Entry>.self, query) { result in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, query) { result in
             switch result {
             case .success(let entriesCollection):
                 expect(entriesCollection.items.count).to(equal(1))
@@ -409,7 +409,7 @@ class EntryTests: XCTestCase {
 
         let expectation = self.expectation(description: "Will return entries likning to happy cat ")
 
-        EntryTests.client.fetch(CCollection<Entry>.self, query) { result in
+        EntryTests.client.fetch(ArrayResponse<Entry>.self, query) { result in
             switch result {
             case .success(let entriesCollection):
                 expect(entriesCollection.items.count).to(equal(1))

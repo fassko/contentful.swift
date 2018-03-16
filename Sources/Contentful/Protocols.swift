@@ -15,6 +15,7 @@ public protocol Resource {
     var sys: Sys { get }
 }
 
+
 public protocol ResourceProtocol {
     /// The unique identifier of the Resource.
     var id: String { get }
@@ -51,14 +52,6 @@ public extension ResourceProtocol where Self: Resource {
     }
 }
 
-public protocol AssetProtocol {
-    var urlString: String? { get }
-    var file: Asset.FileMetadata? { get }
-    var title: String? { get }
-    var assetDescription: String? { get }
-}
-
-
 /// A protocol enabling strongly typed queries to the Contentful Delivery API via the SDK.
 public protocol EntryQueryable {
 
@@ -71,8 +64,8 @@ internal protocol EndpointAccessible {
     static var endpoint: Endpoint { get }
 }
 
-// To be made available in the next public release.
-internal protocol ResourceQueryable {
+/// Entities conforming to this protocol have a QueryType that the SDK can use to make generic fetch requests.
+public protocol ResourceQueryable {
 
     associatedtype QueryType: AbstractQuery
 }
@@ -91,25 +84,16 @@ public typealias ContentTypeId = String
 
  ```
  func fetchMappedEntries(with query: Query<Cat>,
- then completion: @escaping ResultsHandler<MappedCCollection<Cat>>) -> URLSessionDataTask?
+ then completion: @escaping ResultsHandler<MappedArrayResponse<Cat>>) -> URLSessionDataTask?
  ```
  */
-public typealias EntryDecodable = ResourceProtocol & EntryModel
-
-
-/**
- Implement this protocol in conjunction with the Resource protocol to enable deserialization to
- types of your own definition. See `EntryDecodable` for more info.
- */
-public protocol EntryModel: class, Decodable {
-
+public protocol EntryDecodable: ResourceProtocol, Decodable {
     /// The identifier of the Contentful content type that will map to this type of `EntryPersistable`
     static var contentTypeId: ContentTypeId { get }
 }
 
-public protocol AssetModel: class, Decodable {}
-
-public typealias AssetDecodable = ResourceProtocol & AssetProtocol & AssetModel
+// TODO: USE THIS
+public protocol AssetDecodable: ResourceProtocol, Decodable {}
 
 public class DeletedResource: Resource, ResourceProtocol, Decodable {
 

@@ -55,7 +55,7 @@ class AssetTests: XCTestCase {
     func testFetchAllAssetsInSpace() {
         let expectation = self.expectation(description: "Fetch all assets network expectation")
 
-        AssetTests.client.fetch(CCollection<Asset>.self, AssetQuery()) { assets in
+        AssetTests.client.fetch(ArrayResponse<Asset>.self, AssetQuery()).then { assets in
             expect(assets.items.count).to(equal(5))
 
             if let asset = (assets.items.filter { $0.sys.id == "nyancat" }).first {
@@ -93,7 +93,7 @@ class AssetTests: XCTestCase {
         let expectation = self.expectation(description: "Fetch image from asset network expectation")
 
         // FIXME: We should have a different test expectation as this mimics the one above
-        AssetTests.client.fetch(CCollection<Asset>.self, .where(mimetypeGroup: .image)) { result in
+        AssetTests.client.fetch(ArrayResponse<Asset>.self, .where(mimetypeGroup: .image)) { result in
             switch result {
             case .success(let assets):
                 expect(assets.items.count).to(equal(4))
@@ -110,7 +110,7 @@ class AssetTests: XCTestCase {
     func testDeserializingVideoAssetURL() {
         let expectation = self.expectation(description: "Fetch video asset network expectation")
 
-        AssetTests.client.fetchAssets(matching: AssetQuery.where(mimetypeGroup: .video)).then { assets in
+        AssetTests.client.fetch(ArrayResponse<Asset>.self, .where(mimetypeGroup: .video)).then { assets in
 
             expect(assets.items.count).to(equal(1))
             expect(assets.items.first?.urlString).to(equal("https://videos.ctfassets.net/dumri3ebknon/Gluj9lzquYcK0agoCkMUs/1104fffefa098062fd9f888a0a571edd/Cute_Cat_-_3092.mp4"))

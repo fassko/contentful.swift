@@ -66,7 +66,7 @@ class LocalizationTests: XCTestCase {
 
         let expecatation = self.expectation(description: "Entries matching query network expectation")
 
-        LocalizationTests.client.fetch(CCollection<Entry>.self, Query.where(sys: .id, .equals("nyancat")).localizeResults(withLocaleCode: "*")) { result in
+        LocalizationTests.client.fetch(ArrayResponse<Entry>.self, Query.where(sys: .id, .equals("nyancat")).localizeResults(withLocaleCode: "*")) { result in
             switch result {
             case .success(let entriesCollection):
                 let entry = entriesCollection.items.first!

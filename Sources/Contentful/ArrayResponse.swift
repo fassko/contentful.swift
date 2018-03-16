@@ -1,5 +1,5 @@
 //
-//  Collection.swift
+//  ArrayResponse.swift
 //  Contentful
 //
 //  Created by Boris Bügling on 18/08/15.
@@ -14,7 +14,7 @@ private protocol Array {
 
     var total: UInt { get }
 
-    var errors: [CollectionError]? { get }
+    var errors: [ArrayResponseError]? { get }
 }
 
 internal enum ArrayCodingKeys: String, CodingKey {
@@ -32,7 +32,7 @@ private protocol HomogeneousArray: Array {
  Sometimes, when links are unresolvable (for instance, when a linked entry is not published), the API
  will return an array of errors, one for each unresolvable link.
 */
-public struct CollectionError: Decodable {
+public struct ArrayResponseError: Decodable {
     /// The system fields of the error.
     public struct Sys: Decodable {
         let id: String
@@ -42,7 +42,7 @@ public struct CollectionError: Decodable {
     /// System fields for the unresolvable link.
     public let details: Link.Sys
     /// System fields describing the type of this object ("error") and the error message: generally "notResolvable".
-    public let sys: CollectionError.Sys
+    public let sys: ArrayResponseError.Sys
 }
 
 /**
@@ -51,7 +51,7 @@ public struct CollectionError: Decodable {
  This is the result type for any request of a collection of resources.
  See: <https://www.contentful.com/developers/docs/references/content-delivery-api/#/introduction/collection-resources-and-pagination>
  */
-public struct CCollection<ItemType>: HomogeneousArray where ItemType: Resource & Decodable {
+public struct ArrayResponse<ItemType>: HomogeneousArray where ItemType: Resource & Decodable {
 
     /// The resources which are part of the given array
     public let items: [ItemType]
@@ -67,7 +67,7 @@ public struct CCollection<ItemType>: HomogeneousArray where ItemType: Resource &
 
     /// An array of errors, or partial errors, which describe links which were returned in the response that
     /// cannot be resolved.
-    public let errors: [CollectionError]?
+    public let errors: [ArrayResponseError]?
 
     internal let includes: Includes?
     internal let mappedIncludes: MappedIncludes?
@@ -96,16 +96,16 @@ public struct CCollection<ItemType>: HomogeneousArray where ItemType: Resource &
     }
 }
 
-
-extension CCollection: Decodable {
+extension ArrayResponse: Decodable {
     public init(from decoder: Decoder) throws {
         let container   = try decoder.container(keyedBy: ArrayCodingKeys.self)
 
         skip            = try container.decode(UInt.self, forKey: .skip)
         total           = try container.decode(UInt.self, forKey: .total)
         limit           = try container.decode(UInt.self, forKey: .limit)
-        errors          = try container.decodeIfPresent([CollectionError].self, forKey: .errors)
+        errors          = try container.decodeIfPresent([ArrayResponseError].self, forKey: .errors)
 
+        // First see if we can decode an array of user-defined types.
         if ItemType.self is EntryDecodable.Type {
 
             // All items and includes.
@@ -140,7 +140,7 @@ extension CCollection: Decodable {
             }
 
             // Workaround for type system not allowing cast of items to [ItemType].
-            self.items = entries.flatMap { $0 as? ItemType }
+            self.items = entries.compactMap { $0 as? ItemType }
 
             // Cache to enable link resolution.
             decoder.linkResolver.cache(entryDecodables: self.items as! [EntryDecodable])
@@ -149,11 +149,11 @@ extension CCollection: Decodable {
             decoder.linkResolver.churnLinks()
         } else {
             mappedIncludes  = nil
-            includes        = try container.decodeIfPresent(CCollection.Includes.self, forKey: .includes)
+            includes        = try container.decodeIfPresent(ArrayResponse.Includes.self, forKey: .includes)
             items           = try container.decode([ItemType].self, forKey: .items)
 
             // Workaround for type system not allowing cast of items to [Entry]
-            let entries: [Entry] = items.flatMap { $0 as? Entry }
+            let entries: [Entry] = items.compactMap { $0 as? Entry }
 
             let allIncludedEntries = entries + (includedEntries ?? [])
 
@@ -197,14 +197,14 @@ internal struct MappedIncludes: Decodable {
 
 /**
  A list of Contentful entries that have been mapped to types conforming to `EntryDecodable` instances.
- A MixedCollection respresents a heterogeneous collection of EntryDecodables being returned,
+ A MixedMappedArrayResponse respresents a heterogeneous collection of EntryDecodables being returned,
  for instance if hitting the base /entries endpoint with no additional query parameters. If there is no
  user-defined type for a particular entry, that entry will not be serialized at all. It is up to you to
  introspect the type of each element in the items array to handle the response data properly.
 
  See: <https://www.contentful.com/developers/docs/references/content-delivery-api/#/introduction/collection-resources-and-pagination>
  */
-public struct MixedCollection: Array {
+public struct MixedMappedArrayResponse: Array {
 
     /// The resources which are part of the given array
     public let items: [EntryDecodable]
@@ -220,7 +220,7 @@ public struct MixedCollection: Array {
 
     /// An array of errors, or partial errors, which describe links which were returned in the response that
     /// cannot be resolved.
-    public let errors: [CollectionError]?
+    public let errors: [ArrayResponseError]?
 
     internal let includes: MappedIncludes?
 
@@ -232,14 +232,14 @@ public struct MixedCollection: Array {
     }
 }
 
-extension MixedCollection: Decodable {
+extension MixedMappedArrayResponse: Decodable {
 
     public init(from decoder: Decoder) throws {
         let container   = try decoder.container(keyedBy: ArrayCodingKeys.self)
         skip            = try container.decode(UInt.self, forKey: .skip)
         total           = try container.decode(UInt.self, forKey: .total)
         limit           = try container.decode(UInt.self, forKey: .limit)
-        errors          = try container.decodeIfPresent([CollectionError].self, forKey: .errors)
+        errors          = try container.decodeIfPresent([ArrayResponseError].self, forKey: .errors)
 
         // All items and includes.
         includes        = try container.decodeIfPresent(MappedIncludes.self, forKey: .includes)

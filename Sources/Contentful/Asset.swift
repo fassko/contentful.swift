@@ -41,7 +41,7 @@ public protocol AssetProtocol {
 }
 
 /// An asset represents a media file in Contentful.
-public class Asset: LocalizableResource, AssetProtocol, AssetModel {
+public class Asset: LocalizableResource, AssetProtocol, AssetDecodable {
 
     /// The key paths for member fields of an Asset
     public enum Fields: String, CodingKey {

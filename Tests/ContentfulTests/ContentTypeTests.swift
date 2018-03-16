@@ -70,7 +70,7 @@ class ContentTypeTests: XCTestCase {
         let expectation = self.expectation(description: "can fetch all content types of a space")
 
         let query = try! ContentTypeQuery.order(by: Ordering(sys: .id))
-        ContentTypeTests.client.fetch(CCollection<ContentType>.self, query) { result in
+        ContentTypeTests.client.fetch(ArrayResponse<ContentType>.self, query) { result in
             switch result {
             case let .success(array):
                 expect(array.total).to(equal(4))
@@ -94,7 +94,7 @@ class ContentTypeTests: XCTestCase {
         let expectation = self.expectation(description: "can fetch all content types of a space")
 
         let query = ContentTypeQuery.where(queryableCodingKey: .name, .equals("Cat"))
-        ContentTypeTests.client.fetch(CCollection<ContentType>.self, query) { result in
+        ContentTypeTests.client.fetch(ArrayResponse<ContentType>.self, query) { result in
             switch result {
             case let .success(array):
                 expect(array.total).to(equal(1))

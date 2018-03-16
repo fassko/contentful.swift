@@ -20,5 +20,3 @@ public enum Endpoint: String {
         return rawValue
     }
 }
-
-
