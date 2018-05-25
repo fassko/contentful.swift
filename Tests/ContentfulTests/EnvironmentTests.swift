@@ -10,7 +10,6 @@
 import XCTest
 import Nimble
 import DVR
-import Interstellar
 
 class EnvironmentsTests: XCTestCase {
 

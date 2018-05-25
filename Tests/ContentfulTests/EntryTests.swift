@@ -11,7 +11,6 @@ import Foundation
 import XCTest
 import Nimble
 import DVR
-import Interstellar
 
 // TODO: Use this in the main target...or seperate dependency.
 extension Date {

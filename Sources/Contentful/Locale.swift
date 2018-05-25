@@ -21,6 +21,7 @@ public class Locale: Resource, Decodable {
 
     /// System fields.
     public let sys: Sys
+
     /// Linked list accessor for going to the next fallback locale
     public let fallbackLocaleCode: LocaleCode?
 

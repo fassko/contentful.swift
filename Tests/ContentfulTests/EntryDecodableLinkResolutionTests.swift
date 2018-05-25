@@ -10,7 +10,6 @@
 import XCTest
 import Nimble
 import DVR
-import Interstellar
 
 // From Complex-Sync-Test-Space
 class LinkClass: Resource, EntryDecodable, EntryQueryable {

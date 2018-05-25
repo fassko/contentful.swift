@@ -9,7 +9,6 @@
 import Foundation
 
 
-
 /// A concrete implementation of ChainableQuery which can be used to make queries on `/entries/`
 /// or `/entries`. All methods from ChainableQuery are available.
 public class Query: ResourceQuery, EntryQuery {

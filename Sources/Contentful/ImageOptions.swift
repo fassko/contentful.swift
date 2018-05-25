@@ -16,7 +16,7 @@ import CoreGraphics
 #endif
 
 
-public extension AssetProtocol {
+public extension AssetDecodable {
     /**
      The URL for the underlying media file with additional options for server side manipulations
      such as format changes, resizing, cropping, and focusing on different areas including on faces,

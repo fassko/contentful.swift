@@ -39,11 +39,6 @@ public extension Decoder {
         return sys
     }
 
-    // TODO: finalize
-    public func id() throws -> String {
-        return try sys().id
-    }
-
     /// Extract the nested JSON container for the "fields" dictionary present in Entry and Asset resources.
     public func contentfulFieldsContainer<NestedKey>(keyedBy keyType: NestedKey.Type) throws -> ContentfulFieldsContainer<NestedKey> {
         let container = try self.container(keyedBy: LocalizableResource.CodingKeys.self)
@@ -298,7 +293,8 @@ public struct ContentfulFieldsContainer<K>: KeyedDecodingContainerProtocol where
         return try _decode(type, forKey: key)
     }
 
-    public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+    public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type,
+                                           forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
         return try keyedDecodingContainer.nestedContainer(keyedBy: type, forKey: key)
     }
 
@@ -352,8 +348,7 @@ public class LinkResolver {
         callbacks[key, default: []] += [callback]
     }
 
-    // FIXME: Should we append the source item to the key so we can
-    public func resolve(_ links: [Link], callback: @escaping (Any) -> Void) {
+    internal func resolve(_ links: [Link], callback: @escaping (Any) -> Void) {
         let linksIdentifier: String = links.reduce(into: LinkResolver.linksArrayPrefix) { (id, link) in
             id += "," + DataCache.cacheKey(for: link)
         }

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Interstellar
 
 /// A container for the synchronized state of a Space
 public final class SyncSpace: Decodable {

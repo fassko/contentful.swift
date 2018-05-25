@@ -7,12 +7,6 @@
 //
 
 import Foundation
-import Interstellar
-
-
-/// A tuple of data task, enabling the cancellation of http requests, and an `Observable` for the resulting
-/// items that were fetched from the Contentful Content Delivery API.
-public typealias TaskObservable<T> = (task: URLSessionDataTask?, observable: Observable<Result<T>>)
 
 /// The completion callback for an API request with a `Result<T>` containing the requested object of
 /// type `T` on success, or an error if the request was unsuccessful.
@@ -157,7 +151,7 @@ open class Client {
         return url
     }
 
-    // TODO: make this function public
+    // TODO: Document
     public func fetch<DecodableType: Decodable>(url: URL?,
                                                 then completion: @escaping ResultsHandler<DecodableType>) -> URLSessionDataTask? {
 
@@ -181,7 +175,8 @@ open class Client {
                 // Now that we have all the locale information, start callback chain.
                 finishDataFetch(dataResult)
             } else {
-                self.fetchLocales { localesResult in
+                // callFetchLocalesInternal
+                self.fetch(Array<Contentful.Locale>.self) { localesResult in
                     switch localesResult {
                     case .success:
                         // Trigger chain with data we're currently interested in.
@@ -226,11 +221,6 @@ open class Client {
 
         task.resume()
         return task
-    }
-
-    internal func fetch(url: URL) ->  (task: URLSessionDataTask?, observable: Observable<Result<Data>>) {
-        let asyncDataTask: AsyncDataTask<URL, Data> = fetch
-        return toObservable(parameter: url, asyncDataTask: asyncDataTask)
     }
 
     // Returns the rate limit reset.
@@ -287,14 +277,16 @@ open class Client {
 
 extension Client {
 
-    // TODO: Document.
-    @discardableResult internal func fetchLocales(then completion: @escaping ResultsHandler<Array<Contentful.Locale>>) -> URLSessionDataTask? {
-        if let locales = self.locales {
-            let localeCodes = locales.map { $0.code }
-            persistenceIntegration?.update(localeCodes: localeCodes)
-            completion(Result.success(locales))
-            return nil
-        }
+
+    /**
+     TODO: Fix documentation.
+     Fetch all the locales belonging to the environment that was configured with the client.
+
+     - Parameter completion: A handler being called on completion of the request.
+     - Returns: The data task being used, enables cancellation of requests.
+     */
+    @discardableResult public func fetch(_: ArrayResponse<Contentful.Locale>.Type,
+                                         then completion: @escaping ResultsHandler<ArrayResponse<Contentful.Locale>>) -> URLSessionDataTask? {
 
         // The robust thing to do would be to fetch all pages of the `/locales` endpoint, however, pagination is not supported
         // at the moment. We also are not expecting any consumers to have > 1000 locales as Contentful subscriptions do not allow that.
@@ -318,13 +310,26 @@ extension Client {
                 return
             }
             self.localizationContext = localizationContext
-            completion(Result.success(locales))
+            completion(result)
         }
     }
 
-    @discardableResult internal func fetchLocales() -> Observable<Result<Array<Contentful.Locale>>> {
-        let asyncDataTask: SignalBang<Array<Contentful.Locale>> = fetchLocales(then:)
-        return toObservable(closure: asyncDataTask).observable
+    @discardableResult internal func fetch(_: Array<Contentful.Locale>.Type,
+                                           then completion: @escaping ResultsHandler<Array<Contentful.Locale>>) -> URLSessionDataTask? {
+        if let locales = self.locales {
+            let localeCodes = locales.map { $0.code }
+            persistenceIntegration?.update(localeCodes: localeCodes)
+            completion(Result.success(locales))
+            return nil
+        }
+        return fetch(ArrayResponse<Locale>.self) { result in
+            switch result {
+            case .success(let localesResponse):
+                completion(Result.success(localesResponse.items))
+            case .error(let error):
+                completion(Result.error(error))
+            }
+        }
     }
 }
 
@@ -337,7 +342,7 @@ extension Client {
      - Returns: The data task being used, which enables cancellation of requests, or `nil` if the.
      Space was already cached locally
      */
-    @discardableResult public func fetchSpace(then completion: @escaping ResultsHandler<Space>) -> URLSessionDataTask? {
+    @discardableResult public func fetch(_: Space.Type, then completion: @escaping ResultsHandler<Space>) -> URLSessionDataTask? {
         // Attempt to pull from cache first.
         if let space = self.space {
             completion(Result.success(space))
@@ -347,17 +352,6 @@ extension Client {
             self.space = result.value
             completion(result)
         }
-    }
-
-    /**
-     Fetch the space this client is constrained to.
-
-     - Returns: A tuple of data task and a signal for the resulting Space.
-     */
-
-    @discardableResult public func fetchSpace() -> Observable<Result<Space>> {
-        let asyncDataTask: SignalBang<Space> = fetchSpace(then:)
-        return toObservable(closure: asyncDataTask).observable
     }
 }
 
@@ -370,13 +364,15 @@ extension Client {
      - Returns: The `Observable` for the `Data` result.
 
      */
-    @discardableResult public func fetchData(for asset: AssetProtocol, with imageOptions: [ImageOption] = []) -> Observable<Result<Data>> {
+    @discardableResult public func fetchData(for asset: AssetDecodable,
+                                             with imageOptions: [ImageOption] = [],
+                                             then completion: @escaping ResultsHandler<Data>) -> URLSessionDataTask? {
         do {
-            return fetch(url: try asset.url(with: imageOptions)).observable
+            let url = try asset.url(with: imageOptions)
+            return fetch(url: url, completion: completion)
         } catch let error {
-            let observable = Observable<Result<Data>>()
-            observable.update(Result.error(error))
-            return observable
+            completion(Result.error(error))
+            return nil
         }
     }
 }
@@ -392,19 +388,17 @@ extension Client {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: completion)
     }
 
-    @discardableResult internal func fetch<ResourceType, QueryType>(_ resourceType: ArrayResponse<ResourceType>.Type,
-                                                                    _ query: QueryType) -> Observable<Result<ArrayResponse<ResourceType>>>
-        where ResourceType: EndpointAccessible & ResourceQueryable, QueryType == ResourceType.QueryType {
-
-            let asyncDataTask: TypeErasedAsyncDataTask<ArrayResponse<ResourceType>, QueryType> = fetch(_:_:then:)
-            return toObservable(resourceType, parameter: query, asyncDataTask: asyncDataTask).observable
-    }
-
-
     @discardableResult internal func fetch<ResourceType>(_ resourceType: ResourceType.Type,
                                                          id: String,
                                                          then completion: @escaping ResultsHandler<ResourceType>) -> URLSessionDataTask?
         where ResourceType: Resource & Decodable & EndpointAccessible {
+
+            /// If the resource is not an entry, then don't worry about fetching with includes.
+            if resourceType != EntryDecodable.self && resourceType != Entry.self {
+                var url = self.url(endpoint: ResourceType.endpoint)
+                url?.appendPathComponent(id)
+                return fetch(url: url, then: completion)
+            }
 
             let fetchCompletion: (Result<ArrayResponse<ResourceType>>) -> Void = { result in
                 switch result {
@@ -421,15 +415,6 @@ extension Client {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: fetchCompletion)
     }
 
-
-    @discardableResult internal func fetch<ResourceType>(_ resourceType: ResourceType.Type,
-                                                         id: String) -> Observable<Result<ResourceType>>
-            where ResourceType: Resource & Decodable & EndpointAccessible {
-        let asyncDataTask: TypeErasedAsyncDataTask<ResourceType, String> = fetch(_:id:then:)
-        return toObservable(resourceType, parameter: id, asyncDataTask: asyncDataTask).observable
-    }
-
-
     @discardableResult internal func fetch<EntryType>(_ entryType: ArrayResponse<EntryType>.Type,
                                                       _ query: QueryOn<EntryType>,
                                                       then completion: @escaping ResultsHandler<ArrayResponse<EntryType>>) -> URLSessionDataTask? {
@@ -437,52 +422,16 @@ extension Client {
         return fetch(url: url, then: completion)
     }
 
-    @discardableResult internal func fetch<EntryType>(_ entryType: ArrayResponse<EntryType>.Type,
-                                                      _ query: QueryOn<EntryType>) -> Observable<Result<ArrayResponse<EntryType>>> {
-        let asyncDataTask: TypeErasedAsyncDataTask<ArrayResponse<EntryType>, QueryOn<EntryType>> = fetch(_:_:then:)
-        return toObservable(entryType, parameter: query, asyncDataTask: asyncDataTask).observable
-
-    }
-
     @discardableResult internal func fetch(_ query: Query,
                                            then completion: @escaping ResultsHandler<MixedMappedArrayResponse>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
-    }
-
-    @discardableResult internal func fetch(_ query: Query) -> Observable<Result<MixedMappedArrayResponse>> {
-        let asyncDataTask: AsyncDataTask<Query, MixedMappedArrayResponse> = fetch(_:then:)
-        return toObservable(parameter: query, asyncDataTask: asyncDataTask).observable
     }
 }
 
 // MARK: Sync
 
 extension Client {
-
-    /**
-     Perform a synchronization operation, updating the passed in `SyncSpace` object with
-     latest content from Contentful. If the passed in `SyncSpace` is a new empty instance with an empty
-     sync token, a full synchronization will be done.
-
-     Calling this will mutate the instance and also return a reference to itself to the completion
-     handler in order to allow chaining of operations.
-
-     - Parameter syncSpace: the relevant `SyncSpace` to perform the subsequent sync on. Defaults to a new empty instance of sync space.
-     - Parameter syncableTypes: The types that can be synchronized.
-
-     - Returns: An `Observable` which will be fired when the `SyncSpace` is fully synchronized with Contentful.
-     */
-    @discardableResult public func sync(for syncSpace: SyncSpace = SyncSpace(),
-                                        syncableTypes: SyncSpace.SyncableTypes = .all) -> Observable<Result<SyncSpace>> {
-
-        let observable = Observable<Result<SyncSpace>>()
-        self.sync(for: syncSpace, syncableTypes: syncableTypes) { result in
-            observable.update(result)
-        }
-        return observable
-    }
-
 
     /**
      Perform a synchronization operation, updating the passed in `SyncSpace` object with

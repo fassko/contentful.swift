@@ -8,10 +8,11 @@
 
 import Foundation
 
+public protocol SpaceProtocol {}
 /// A Space represents a collection of Content Types, Assets and Entries in Contentful
-public class Space: Resource, ResourceProtocol, Decodable {
+public class Space: Resource, ResourceProtocol, Decodable, SpaceProtocol {
 
-    ///  System fields.
+    /// System fields.
     public let sys: Sys
 
     /// Available Locales for this Space
@@ -25,7 +26,7 @@ public class Space: Resource, ResourceProtocol, Decodable {
         return sys.type
     }
 
-    // MARK: <ImmutableMappable>
+    // MARK: <Decodable>
 
     public required init(from decoder: Decoder) throws {
         let container       = try decoder.container(keyedBy: CodingKeys.self)

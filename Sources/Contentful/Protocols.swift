@@ -92,9 +92,6 @@ public protocol EntryDecodable: ResourceProtocol, Decodable {
     static var contentTypeId: ContentTypeId { get }
 }
 
-// TODO: USE THIS
-public protocol AssetDecodable: ResourceProtocol, Decodable {}
-
 public class DeletedResource: Resource, ResourceProtocol, Decodable {
 
     public let sys: Sys
