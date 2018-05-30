@@ -69,9 +69,6 @@ open class Client {
         }
     }
 
-    // The delegate which will receive messages containing the raw data fetched at a specified URL.
-    private var dataDelegate: DataDelegate?
-
     internal var urlSession: URLSession
 
     fileprivate(set) var space: Space?
@@ -120,7 +117,6 @@ open class Client {
         }
 
         self.persistenceIntegration = persistenceIntegration
-        self.dataDelegate = clientConfiguration.dataDelegate
         let contentfulHTTPHeaders = [
             "Authorization": "Bearer \(accessToken)",
             "X-Contentful-User-Agent": clientConfiguration.userAgentString(with: persistenceIntegration)
@@ -163,7 +159,6 @@ open class Client {
         let finishDataFetch: (ResultsHandler<Data>) = { result in
             switch result {
             case .success(let mappableData):
-                self.dataDelegate?.handleDataFetchedAtURL(mappableData, url: url)
                 self.handleJSON(mappableData, completion)
             case .error(let error):
                 completion(Result.error(error))
