@@ -376,14 +376,14 @@ extension Client {
 // New way of interacting to be made public in future pull requests.
 extension Client {
 
-    @discardableResult internal func fetch<ResourceType, QueryType>(_ resourceType: ArrayResponse<ResourceType>.Type,
+    @discardableResult public func fetch<ResourceType, QueryType>(_ resourceType: ArrayResponse<ResourceType>.Type,
                                                                     _ query: QueryType,
                                                                     then completion: @escaping ResultsHandler<ArrayResponse<ResourceType>>) -> URLSessionDataTask?
         where ResourceType: EndpointAccessible & ResourceQueryable, QueryType == ResourceType.QueryType {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: completion)
     }
 
-    @discardableResult internal func fetch<ResourceType>(_ resourceType: ResourceType.Type,
+    @discardableResult public func fetch<ResourceType>(_ resourceType: ResourceType.Type,
                                                          id: String,
                                                          then completion: @escaping ResultsHandler<ResourceType>) -> URLSessionDataTask?
         where ResourceType: Resource & Decodable & EndpointAccessible {
@@ -410,14 +410,14 @@ extension Client {
             return fetch(url: url(endpoint: ResourceType.endpoint, parameters: query.parameters), then: fetchCompletion)
     }
 
-    @discardableResult internal func fetch<EntryType>(_ entryType: ArrayResponse<EntryType>.Type,
+    @discardableResult public func fetch<EntryType>(_ entryType: ArrayResponse<EntryType>.Type,
                                                       _ query: QueryOn<EntryType>,
                                                       then completion: @escaping ResultsHandler<ArrayResponse<EntryType>>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
     }
 
-    @discardableResult internal func fetch(_ query: Query,
+    @discardableResult public func fetch(_ query: Query,
                                            then completion: @escaping ResultsHandler<MixedMappedArrayResponse>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
