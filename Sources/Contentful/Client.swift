@@ -170,7 +170,6 @@ open class Client {
                 // Now that we have all the locale information, start callback chain.
                 finishDataFetch(dataResult)
             } else {
-                // callFetchLocalesInternal
                 self.fetch(Array<Contentful.Locale>.self) { localesResult in
                     switch localesResult {
                     case .success:
@@ -186,7 +185,8 @@ open class Client {
         return task
     }
 
-    internal func fetch(url: URL, completion: @escaping ResultsHandler<Data>) -> URLSessionDataTask {
+    // TODO: Document
+    public func fetch(url: URL, then completion: @escaping ResultsHandler<Data>) -> URLSessionDataTask {
         let task = urlSession.dataTask(with: url) { data, response, error in
             if let data = data {
                 if self.didHandleRateLimitError(data: data, response: response, completion: completion) == true {
@@ -364,7 +364,7 @@ extension Client {
                                              then completion: @escaping ResultsHandler<Data>) -> URLSessionDataTask? {
         do {
             let url = try asset.url(with: imageOptions)
-            return fetch(url: url, completion: completion)
+            return fetch(url: url, then: completion)
         } catch let error {
             completion(Result.error(error))
             return nil
