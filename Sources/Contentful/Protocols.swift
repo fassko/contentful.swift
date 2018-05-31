@@ -60,7 +60,7 @@ public protocol EntryQueryable {
     associatedtype Fields: CodingKey
 }
 
-internal protocol EndpointAccessible {
+public protocol EndpointAccessible {
     static var endpoint: Endpoint { get }
 }
 

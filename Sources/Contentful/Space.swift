@@ -44,5 +44,5 @@ public class Space: Resource, ResourceProtocol, Decodable, SpaceProtocol {
 
 extension Space: EndpointAccessible {
 
-    static let endpoint = Endpoint.spaces
+    public static let endpoint = Endpoint.spaces
 }

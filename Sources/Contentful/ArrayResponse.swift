@@ -51,7 +51,7 @@ public struct ArrayResponseError: Decodable {
  This is the result type for any request of a collection of resources.
  See: <https://www.contentful.com/developers/docs/references/content-delivery-api/#/introduction/collection-resources-and-pagination>
  */
-public struct ArrayResponse<ItemType>: HomogeneousArray where ItemType: Resource & Decodable {
+public struct ArrayResponse<ItemType>: HomogeneousArray where ItemType: ResourceProtocol & Decodable {
 
     /// The resources which are part of the given array
     public let items: [ItemType]

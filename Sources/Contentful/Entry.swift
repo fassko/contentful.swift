@@ -69,7 +69,7 @@ public class Entry: LocalizableResource {
 
 extension Entry: EndpointAccessible {
 
-    static let endpoint = Endpoint.entries
+    public static let endpoint = Endpoint.entries
 }
 
 extension Entry: ResourceQueryable {

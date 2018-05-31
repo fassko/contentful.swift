@@ -165,7 +165,7 @@ extension Asset {
 
 extension Asset: EndpointAccessible {
 
-    static let endpoint = Endpoint.assets
+    public static let endpoint = Endpoint.assets
 }
 
 extension Asset: ResourceQueryable {

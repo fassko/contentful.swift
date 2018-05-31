@@ -384,9 +384,9 @@ extension Client {
     }
 
     @discardableResult public func fetch<ResourceType>(_ resourceType: ResourceType.Type,
-                                                         id: String,
-                                                         then completion: @escaping ResultsHandler<ResourceType>) -> URLSessionDataTask?
-        where ResourceType: Resource & Decodable & EndpointAccessible {
+                                                       id: String,
+                                                       then completion: @escaping ResultsHandler<ResourceType>) -> URLSessionDataTask?
+        where ResourceType: ResourceProtocol & Decodable & EndpointAccessible {
 
             /// If the resource is not an entry, then don't worry about fetching with includes.
             if resourceType != EntryDecodable.self && resourceType != Entry.self {
@@ -411,8 +411,8 @@ extension Client {
     }
 
     @discardableResult public func fetch<EntryType>(_ entryType: ArrayResponse<EntryType>.Type,
-                                                      _ query: QueryOn<EntryType>,
-                                                      then completion: @escaping ResultsHandler<ArrayResponse<EntryType>>) -> URLSessionDataTask? {
+                                                    _ query: QueryOn<EntryType>,
+                                                    then completion: @escaping ResultsHandler<ArrayResponse<EntryType>>) -> URLSessionDataTask? {
         let url = self.url(endpoint: .entries, parameters: query.parameters)
         return fetch(url: url, then: completion)
     }

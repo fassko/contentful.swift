@@ -53,5 +53,5 @@ public class ContentType: Resource, ResourceProtocol, Decodable, ResourceQueryab
 
 extension ContentType: EndpointAccessible {
 
-    static let endpoint = Endpoint.contentTypes
+    public static let endpoint = Endpoint.contentTypes
 }

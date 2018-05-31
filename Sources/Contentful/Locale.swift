@@ -13,11 +13,11 @@ public typealias LocaleCode = String
 
 extension Locale: EndpointAccessible {
 
-    static let endpoint = Endpoint.locales
+    public static let endpoint = Endpoint.locales
 }
 
 /// A Locale represents possible translations for Entry Fields
-public class Locale: Resource, Decodable {
+public class Locale: Resource, ResourceProtocol, Decodable {
 
     /// System fields.
     public let sys: Sys
