@@ -31,14 +31,14 @@ internal extension String {
 }
 
 /// A simple protocol to bridge `Contentful.Asset` and other formats for storing asset information.
-public protocol AssetDecodable: ResourceProtocol, Decodable {
-
-    /// The identifier of the asset.
-    var id: String { get }
+public protocol AssetProtocol: ResourceProtocol {
 
     /// String representation for the URL of the media file associated with this asset.
     var urlString: String? { get }
 }
+
+// TODO: Document
+public protocol AssetDecodable: AssetProtocol, Decodable {}
 
 /// An asset represents a media file in Contentful.
 public class Asset: LocalizableResource, AssetDecodable {

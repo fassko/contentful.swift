@@ -359,7 +359,7 @@ extension Client {
      - Returns: The `Observable` for the `Data` result.
 
      */
-    @discardableResult public func fetchData(for asset: AssetDecodable,
+    @discardableResult public func fetchData(for asset: AssetProtocol,
                                              with imageOptions: [ImageOption] = [],
                                              then completion: @escaping ResultsHandler<Data>) -> URLSessionDataTask? {
         do {
